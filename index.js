@@ -39,14 +39,12 @@ app.get("/", async (req, res) => {
     // Listen to network requests and capture .m3u8 URLs
     page.on("request", request => {
       const url = request.url();
-      if (url.includes(".m3u8")) {
+      if (url.includes("playlist.m3u8")) {
         m3u8Links.push(url);
       }
     });
 
-    await page.goto(targetUrl, { waitUntil: "networkidle2", timeout: 10000 });
-
-    await page.waitForTimeout(1000);
+    await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 15000 });
 
     // Wait briefly to allow any remaining requests to fire
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -63,3 +61,4 @@ app.get("/", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
