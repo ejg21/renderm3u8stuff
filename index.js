@@ -44,10 +44,10 @@ app.get("/", async (req, res) => {
       }
     });
 
-    await page.goto(targetUrl, { waitUntil: "networkidle2", timeout: 30000 });
+    await page.goto(targetUrl, { waitUntil: "networkidle2", timeout: 15000 });
 
     // Wait for 2 seconds to allow any remaining requests to fire
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 0500));
 
     await browser.close();
 
