@@ -5,6 +5,8 @@ const app = express();
 
 app.get("/", async (req, res) => {
   const targetUrl = req.query.url;
+  const waitTime = parseInt(req.query.wait || "300"); // wait time in ms, default 300ms
+
   if (!targetUrl) return res.status(400).json({ error: "Missing ?url param" });
 
   try {
@@ -21,11 +23,13 @@ app.get("/", async (req, res) => {
         "--disable-blink-features=AutomationControlled"
       ]
     });
+
     const page = await browser.newPage();
 
     await page.setUserAgent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
     );
+
     await page.setExtraHTTPHeaders({
       "accept-language": "en-US,en;q=0.9",
       "sec-fetch-site": "same-origin",
@@ -36,22 +40,21 @@ app.get("/", async (req, res) => {
 
     const m3u8Links = [];
 
-    // Listen to network requests and capture .m3u8 URLs
+    // Listen to network requests and capture .m3u8 URLs and backend.xprime.tv URLs
     page.on("request", request => {
       const url = request.url();
-      if (url.includes("playlist.m3u8")) {
+      if (url.includes("playlist.m3u8") || url.includes("backend.xprime.tv")) {
         m3u8Links.push(url);
       }
     });
 
     await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 15000 });
 
-    // Wait briefly to allow any remaining requests to fire
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Wait the specified time to allow remaining requests to fire
+    await new Promise(resolve => setTimeout(resolve, waitTime));
 
     await browser.close();
 
-    // Return unique .m3u8 links
     res.json({ m3u8Links: [...new Set(m3u8Links)] });
   } catch (err) {
     console.error("Error:", err);
@@ -61,4 +64,3 @@ app.get("/", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
